@@ -3,10 +3,8 @@
   "name": "silentdinner",
   "alias": "silentdinner.now.sh",
   "builds": [
-    { "src": "index.html", "use": "@now/html-minifier" }
-  ],
-  "routes": [
-    { "src": "^/silentdinner.jpg", "dest": "/silentdinner.jpg" },
-    { "src": "^/favicon.png", "dest": "/favicon.png" }
+    { "src": "index.html", "use": "@now/html-minifier" },
+    { "src": "silentdinner.jpg", "use": "@now/static" },
+    { "src": "favicon.png", "use": "@now/static" }
   ]
 }
