@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "static",
+  "name": "silentdinner",
   "builds": [
     { "src": "index.html", "use": "@now/html-minifier" }
   ]
