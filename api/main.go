@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/dinners", dinners.Handler)
+	http.HandleFunc("/api/dinners", dinners.Handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

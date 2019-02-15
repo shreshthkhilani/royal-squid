@@ -1,4 +1,4 @@
-package dinners
+package main
 
 import (
 	"context"
