@@ -5,6 +5,10 @@
   "builds": [
     { "src": "index.html", "use": "@now/html-minifier" },
     { "src": "silentdinner.jpg", "use": "@now/static" },
-    { "src": "favicon.png", "use": "@now/static" }
+    { "src": "favicon.png", "use": "@now/static" },
+    { "src": "api/times/*.go", "use": "@now/go" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 }
