@@ -1,0 +1,41 @@
+#img {
+  position: fixed;
+  top: 0;
+  left: 53%;
+  height: 100%;
+  width: 47%;
+  background-image: url('./img/silentdinner.jpg');
+  background-size: cover;
+  background-position: center;
+}
+#txt {
+  margin-left: 3%;
+  width: 47%;
+}
+.imptxt {
+  font-size: 18pt;
+  font-weight: bold;
+}
+#signup {
+  cursor: pointer;
+}
+.imptxt:hover {
+  color: #fc0d1b;
+}
+#slotted {
+  display: none;
+  margin-top: 30px;
+}
+@media screen and (max-width: 425px) {
+  #txt {
+    margin-left: 3%;
+    width: 94%;
+  }
+  #img {
+    position: relative;
+    width: 100%;
+    left: 0;
+    height: 425px;
+    margin-top: 30px;
+  }
+}
