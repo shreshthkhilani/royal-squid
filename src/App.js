@@ -44,9 +44,9 @@ class App extends Component {
     this.setState({signupClicked: true});
     document.body.style.backgroundColor = '#fff';
     document.body.style.color = '#aaa';
-    axios.get('/api/dinners')
+    axios.get('/api/dinners/')
       .then((data) => {
-        this.setState({dinners: data.dinners, dinnersChecked: true});
+        this.setState({dinners: data.data.dinners, dinnersChecked: true});
       })
       .catch((error) => {
         this.setState({dinners: [], dinnersChecked: true});
@@ -84,7 +84,11 @@ class App extends Component {
     };
     axios.post(`/api/reserve/${this.state.dinnerSelection.id}`, postData)
       .then((data) => {
-        this.setState({awaitingConfirmation: true});
+        this.setState({
+          awaitingConfirmation: true,
+          confirmed: data.data.reservation.confirmed,
+          dgae: data.data.reservation.dgae
+        });
       })
       .catch((error) => {
         this.setState({error: true});
@@ -104,7 +108,10 @@ class App extends Component {
     };
     axios.post(`/api/confirm/${this.state.dinnerSelection.id}`, postData)
       .then((data) => {
-        this.setState({confirmed: data.confirmed, dgae: data.dgae});
+        this.setState({
+          confirmed: data.data.reservation.confirmed,
+          dgae: data.data.reservation.dgae
+        });
       })
       .catch((error) => {
         this.setState({error: true});
@@ -169,7 +176,7 @@ class App extends Component {
       } else if (this.state.dgae) {
         slotted = (
           <div id="slotted">
-            <p className="question">that's cool&mdash;my email might be broken, but you're still confirmed! see you soon...</p>
+            <p className="question">you're confirmed&mdash;expect an email! see you soon...</p>
           </div>
         );
       } else if (this.state.confirmed) {

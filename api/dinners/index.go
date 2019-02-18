@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -37,13 +36,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		"authSource=admin&retryWrites=true")
 	if err != nil {
 		fmt.Fprintf(w, "Error connecting.")
+		return
 	}
 	collection := client.Database("silentdinnerdb").Collection("times")
 	ctx, _ = context.WithTimeout(context.Background(), 30 * time.Second)
 	cur, err := collection.Find(ctx, bson.D{{}})
 	if err != nil {
-		log.Print("Find")
-		log.Fatal(err)
+		fmt.Fprintf(w, "Find")
 	}
 	defer cur.Close(ctx)
 	var dinners []Dinner
@@ -51,21 +50,22 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		var result Dinner
 		err := cur.Decode(&result)
 		if err != nil {
-			log.Print("Decode")
-			log.Fatal(err)
+			fmt.Fprintf(w, "Decode")
+			return
 		}
 		dinners = append(dinners, result)
 	}
 	if err := cur.Err(); err != nil {
-		log.Print("Err")
-		log.Fatal(err)
+		fmt.Fprintf(w, "Err")
+		return
 	}
 	response := make(map[string]interface{})
 	response["dinners"] = dinners
 	rw, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
-		log.Print("MarshalIndent")
-		log.Fatal(err)
+		fmt.Fprintf(w, "MarshalIndent")
+		return
 	}
 	fmt.Fprintf(w, string(rw))
+	return
 }
