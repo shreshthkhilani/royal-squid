@@ -13,12 +13,14 @@ import (
 )
 
 type Reservation struct {
+	ID int `bson:"id" json:"id"`
 	Name string `bson:"name" json:"name"`
 	Email string `bson:"email" json:"email"`
 	Timestamp time.Time `bson:"timestamp" json:"timestamp"`
 }
 
 type Dinner struct {
+	ID int `bson:"id" json:"id"`
 	DinnerTime time.Time `bson:"dinnerTime" json:"dinnerTime"`
 	Available  int `bson:"available" json:"available"`
 	Reservations []Reservation `bson:"reservations" json:"reservations"`

@@ -23,8 +23,68 @@
   color: #fc0d1b;
 }
 #slotted {
-  display: none;
-  margin-top: 30px;
+  position: absolute;
+  top: 64px;
+  right: 30%;
+  z-index: 100;
+}
+#slotted > option {
+  background-color: #fc0d1b;
+  color: #fff;
+  padding: 4px 8px 4px 8px;
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+#slotted > option:hover {
+  background-color: #000;
+  color: #fc0d1b;
+}
+.question {
+  font-size: 33pt;
+  font-weight: bold;
+  color: #fc0d1b;
+  margin-left: 32px;
+}
+.grayscale {
+  filter: gray; /* IE6-9 */
+  -webkit-filter: grayscale(1); /* Google Chrome, Safari 6+ & Opera 15+ */
+  filter: grayscale(1); /* Microsoft Edge and Firefox 35+ */
+}
+#reset {
+  font-size: 21pt;
+  font-weight: bold;
+  color: #fc0d1b;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 100;
+  cursor: pointer;
+}
+.selections {
+  text-align: right;
+  color: #fc0d1b;
+  padding: 4px 8px 4px 8px;
+  font-weight: bold;
+}
+label {
+  background-color: #fc0d1b;
+  color: #fff;
+  padding: 4px 8px 4px 8px;
+  margin-right: 8px;
+}
+button {
+  background-color: #fff;
+  border-color: #fc0d1b;
+  color: #fc0d1b;
+  cursor: pointer;
+  margin-top: 16px;
+}
+button:hover {
+  background-color: #fc0d1b;
+  color: #fff;
+}
+input {
+  border-color: #000 !important;
 }
 @media screen and (max-width: 425px) {
   #txt {
