@@ -24,9 +24,10 @@ const initalState = {
 };
 
 class App extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = initalState;
+    this.escFunction = this.escFunction.bind(this);
     this.signupClickedHandler = this.signupClickedHandler.bind(this);
     this.nameChangedHandler = this.nameChangedHandler.bind(this);
     this.emailChangedHandler = this.emailChangedHandler.bind(this);
@@ -39,6 +40,17 @@ class App extends Component {
     this.confirmedHandler = this.confirmedHandler.bind(this);
     this.dgaeHandler = this.dgaeHandler.bind(this);
     this.attemptConfirmation = this.attemptConfirmation.bind(this);
+  }
+  componentDidMount(){
+    document.addEventListener("keydown", this.escFunction, false);
+  }
+  componentWillUnmount(){
+    document.removeEventListener("keydown", this.escFunction, false);
+  }
+  escFunction(e) {
+    if(e.keyCode === 27) {
+      this.resetClickedHandler();
+    }
   }
   signupClickedHandler() {
     this.setState({signupClicked: true});
