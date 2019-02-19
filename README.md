@@ -1,9 +1,8 @@
-Zeit Now Evaluation – Sample "Brutalist" Art App
-------------------------------------------------
+# Zeit Now Evaluation – Sample "Brutalist" Art App
 
 [https://silentencounter.now.sh](https://silentencounter.now.sh)
 
-# Overview
+## Overview
 
 `royal-squid` is a Brutalist (in design) React app that allows for scheduling "silent&counter"s. It does so by communicating to a MongoDB database via Golang lambda functions.
 
@@ -17,7 +16,7 @@ First, get the ENV you need. These are specified in `.env.sample`. You need to c
 cp .env.sample .env
 ```
 
-## React App
+### React App
 
 This part is easy! (But the app doesn't really work sans the next part...)
 
@@ -26,7 +25,7 @@ npm install
 npm start
 ```
 
-## Golang API
+### Golang API
 
 This part is not! Start by renaming the `package main` on the first line of the following files to `package dinners`, `package reserve`, `package confrim`, and `package users` respectively: `api/dinners/index.go`, `api/reserve/index.go`, `api/confrim/index.go`, `api/users/index.go`. I should have done this programatically while building the container, but I didn't––sorry!
 
@@ -39,7 +38,7 @@ docker run -it --rm -p 8080:8080 --env-file .env royal-squid
 
 Great––the problem now is that your Golang app is serving on a different port on localhost and trying to make React make requests to that port will yeild CORS errors––
 
-# Zeit Now
+## Zeit Now
 
 Zeit Now is a tool for serverless applications. It gives you what Netlify does, including CI/CD, GitHub integration, hosting static files, hosting and serving lambdas. It also tries to go far beyond Netlify and it does this by offering infinite customization. Here are some of the customizations I've played with:
 
@@ -47,11 +46,11 @@ Zeit Now is a tool for serverless applications. It gives you what Netlify does, 
  - You can use any database that suits your needs. In this case, Atlas, MongoDB's hosted database.
  - Authetication can be taken care of by you or by a third-party API. It isn't a feature provided out-of-the-box like with Netlify.
 
-# How does this app work?
+## How does this app work?
 
-So, `royal-squid` gives you a frontend and API (written using lambdas that communicate with a database) to schedule a dinner with a potential art project––silent&counter. You click "signup" and are taken through this signup workflow involving seeing dinners available, picking a dinner, entering your info, and receiving an email with an OTP which you can enter to confirm your email and your reservation.
+`royal-squid` gives you a frontend and API (written using lambdas that communicate with a database) to schedule a dinner with a potential art project––silent&counter. You click "signup" and are taken through this signup workflow involving seeing dinners available, picking a dinner, entering your info, and receiving an email with an OTP which you can enter to confirm your email and your reservation.
 
-# Questions
+## Questions
 
 1. How does authentication work?
 
@@ -81,6 +80,8 @@ So, `royal-squid` gives you a frontend and API (written using lambdas that commu
 
     The major problem I see is that I've been unable to successfully deploy my app via GitHub once it started using secrets as environment variables. Now CLI has a way to add secrets to a project and every deploy needs to specify which secret should be made available as env. I haven't figured out how to do this via GitHub and so have been deploying using the CLI. This might be okay if we use our own CI tool to deploy to Now. But this, once again, requires more setup on our part.
 
-# Issues
+## Evaluation
 
-# Evaluation
+As stated above, there are a lot of issues I faced while using Zeit. Primarily, there is no single tutorial to get through making a significant application anywhere online. I had to weave together many blog posts about React in Now, lambdas in Now, authentication in lambdas, cookies in lambdas, making local dev work. All these result in multiple pain-points for which I wrote a lot of boilerplate code and there is definitely more left to write if we go forward with Now. 
+
+All that being said, I would not recommend using this tool for a client project at this stage in its development. However, writing this boilerplate might be immensely helpful to the community and might make for a high-trafficked blog post should Now start being more-widely adopted. 
