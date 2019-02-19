@@ -40,6 +40,7 @@ class App extends Component {
     this.confirmedHandler = this.confirmedHandler.bind(this);
     this.dgaeHandler = this.dgaeHandler.bind(this);
     this.attemptConfirmation = this.attemptConfirmation.bind(this);
+    this.lmkClickedHandler = this.lmkClickedHandler.bind(this);
   }
   componentDidMount(){
     document.addEventListener("keydown", this.escFunction, false);
@@ -134,6 +135,13 @@ class App extends Component {
   dgaeHandler() {
     this.attemptConfirmation();
     // this.setState({dgae: true});
+  }
+  lmkClickedHandler() {
+    const postData = {
+      email: this.state.email
+    };
+    axios.post('/api/users/', postData);
+    this.resetClickedHandler();
   }
   render() {
     let slotted;
@@ -232,9 +240,17 @@ class App extends Component {
         );
       }
     } else if (this.state.dinnersChecked) {
+      const collectemail = (
+        <div>
+          <label>email address</label><input type="text" autoComplete="email" id="email" value={this.state.email} placeholder="john@gmail.com" onChange={this.emailChangedHandler} /> 
+          {this.state.email !== '' ? <button id="lmk" onClick={this.lmkClickedHandler}>lmk!</button> : undefined}
+        </div>
+      );
       slotted = (
         <div id="slotted">
-          <p className="question">sorry, there are currently no dinners available.</p>
+          {collectemail}
+          <p className="question">sorry, there are currently no dinners available. tell us your email if you want to know when there are.</p>
+          }
         </div>
       );
     }
