@@ -17,6 +17,7 @@ const initalState = {
   email: '',
   dietary: '',
   awaitingConfirmation: false,
+  reservation: undefined,
   otp: '',
   confirmed: false,
   error: false
@@ -95,7 +96,10 @@ class App extends Component {
     };
     axios.post('/api/reserve/', postData)
       .then((data) => {
-        this.setState({awaitingConfirmation: true});
+        this.setState({
+          awaitingConfirmation: true,
+          reservation: data.data.reservation
+        });
       })
       .catch((error) => {
         this.setState({error: true});
@@ -107,6 +111,7 @@ class App extends Component {
   attemptConfirmation() {
     const postData = {
       dinnerId: this.state.dinnerSelection.id,
+      reservationId: this.state.reservation.reservationId,
       otp: this.state.otp
     };
     axios.post('/api/confirm/', postData)

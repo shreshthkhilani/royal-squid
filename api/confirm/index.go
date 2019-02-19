@@ -82,6 +82,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	cur, err := dinnersCollection.Find(ctx, bson.D{{"id", res.DinnerID}})
 	if err != nil {
 		http.Error(w, "Find.", 500)
+		fmt.Println(err)
 		return
 	}
 	defer cur.Close(ctx)
@@ -90,29 +91,35 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	err = cur.Decode(&dinner)
 	if err != nil {
 		http.Error(w, "Decode.", 500)
+		fmt.Println(err)
 		return
 	}
 	if err = cur.Err(); err != nil {
 		http.Error(w, "Err.", 500)
+		fmt.Println(err)
 		return
 	}
 	// Get reservation object
+	ctx, _ = context.WithTimeout(context.Background(), 30 * time.Second)
 	reservationsCollection := client.Database("silentdinnerdb").Collection("reservations")
-	cur, err = reservationsCollection.Find(ctx, bson.D{{"reservationId", res.ReservationID}})
+	curr, err := reservationsCollection.Find(ctx, bson.D{{"reservationId", res.ReservationID}})
 	if err != nil {
 		http.Error(w, "Find.", 500)
+		fmt.Println(err)
 		return
 	}
-	defer cur.Close(ctx)
+	defer curr.Close(ctx)
 	var reservation Reservation
-	cur.Next(ctx)
-	err = cur.Decode(&reservation)
+	curr.Next(ctx)
+	err = curr.Decode(&reservation)
 	if err != nil {
 		http.Error(w, "Decode res.", 500)
+		fmt.Println(err)
 		return
 	}
-	if err = cur.Err(); err != nil {
+	if err = curr.Err(); err != nil {
 		http.Error(w, "Err res.", 500)
+		fmt.Println(err)
 		return
 	}
 	// Check if reservation can be made
