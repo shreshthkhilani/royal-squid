@@ -12,7 +12,6 @@ import (
 	"time"
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/badoux/checkmail"
 )
 
 type Reservation struct {
@@ -35,9 +34,9 @@ type Dinner struct {
 }
 
 func send(r Reservation, dt time.Time) error {
-	from := "atatticspace@gmail.com"
+	from := "silentencounter@shreshthkhilani.com"
 	to := r.Email
-	pass := os.Getenv("GMAIL_PW")
+	pass := os.Getenv("SMTP_PW")
 
 	msg := "From: " + from + "\n" +
 		"To: " + to + "\n" +
@@ -46,8 +45,8 @@ func send(r Reservation, dt time.Time) error {
 		dt.Format("Mon, Jan _2") + "\n" +
 		strconv.Itoa(r.Slots) + "\n" + r.Name + "\n" + r.Email + "\n" + r.Dietary
 
-	return smtp.SendMail("smtp.gmail.com:587",
-		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
+	return smtp.SendMail("smtp.mailgun.org:587",
+		smtp.PlainAuth("", from, pass, "smtp.mailgun.org"),
 		from, []string{to}, []byte(msg))
 }
 
@@ -62,11 +61,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(b, &reservation)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		return
-	}
-	err = checkmail.ValidateFormat(reservation.Email)
-	if err != nil {
-		http.Error(w, "Invalid Email.", 500)
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
@@ -105,6 +99,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if dinner.Reservations[i].OTP == reservation.OTP {
 			dinner.Reservations[i].Confirmed = true
 			existingReservation = true
+			reservation = dinner.Reservations[i]
 			err = send(dinner.Reservations[i], dinner.DinnerTime)
 			if err != nil {
 				http.Error(w, "Unable to send email.", 500)

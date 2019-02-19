@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/smtp"
@@ -35,16 +36,16 @@ type Dinner struct {
 }
 
 func send(to string, otp string) error {
-	from := "atatticspace@gmail.com"
-	pass := os.Getenv("GMAIL_PW")
+	from := "silentencounter@shreshthkhilani.com"
+	pass := os.Getenv("SMTP_PW")
 
 	msg := "From: " + from + "\n" +
 		"To: " + to + "\n" +
 		"Subject: silent&counter confirmation code\n\n" +
 		"use this code to confirm your dinner: " + otp
 
-	return smtp.SendMail("smtp.gmail.com:587",
-		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
+	return smtp.SendMail("smtp.mailgun.org:587",
+		smtp.PlainAuth("", from, pass, "smtp.mailgun.org"),
 		from, []string{to}, []byte(msg))
 }
 
@@ -118,6 +119,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	err = send(reservation.Email, reservation.OTP)
 	if err != nil {
 		http.Error(w, "Unable to send email.", 500)
+		log.Fatal(err)
 		return
 	}
 	dinner.Available = dinner.Available - reservation.Slots
