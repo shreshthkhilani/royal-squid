@@ -57,7 +57,7 @@ class App extends Component {
     this.setState({signupClicked: true});
     document.body.style.backgroundColor = '#fff';
     document.body.style.color = '#aaa';
-    axios.get('/api/dinners/')
+    axios.get('/api/dinners/?filter=1')
       .then((data) => {
         this.setState({dinners: data.data.dinners, dinnersChecked: true});
       })
