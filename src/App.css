@@ -83,6 +83,9 @@ button:hover {
   background-color: #fc0d1b;
   color: #fff;
 }
+#dgae {
+  display: none;
+}
 input {
   border-color: #000 !important;
 }

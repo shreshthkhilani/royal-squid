@@ -72,17 +72,18 @@ class App extends Component {
     this.setState({dinnerSelection});
   }
   selectSlots(e) {
-    const slots = e.target.value;
+    const slots = parseInt(e.target.value);
     this.setState({slots});
   }
   buttonClickedHandler() {
     const postData = {
+      dinnerId: this.state.dinnerSelection.id,
       slots: this.state.slots,
       name: this.state.name,
       email: this.state.email,
       dietary: this.state.dietary
     };
-    axios.post(`/api/reserve/${this.state.dinnerSelection.id}`, postData)
+    axios.post('/api/reserve/', postData)
       .then((data) => {
         this.setState({
           awaitingConfirmation: true,
@@ -100,13 +101,10 @@ class App extends Component {
   }
   attemptConfirmation() {
     const postData = {
-      slots: this.state.slots,
-      name: this.state.name,
-      email: this.state.email,
-      dietary: this.state.dietary,
+      dinnerId: this.state.dinnerSelection.id,
       otp: this.state.otp
     };
-    axios.post(`/api/confirm/${this.state.dinnerSelection.id}`, postData)
+    axios.post('/api/confirm/', postData)
       .then((data) => {
         this.setState({
           confirmed: data.data.reservation.confirmed,
@@ -157,7 +155,7 @@ class App extends Component {
           <br/>
           <div align="center">
           {this.state.otp !== '' ? <button onClick={this.confirmedHandler}>confirm</button> : undefined}
-          <button onClick={this.dgaeHandler}>i didn't get an email...</button>
+          <button id="dgae" onClick={this.dgaeHandler}>i didn't get an email...</button>
           </div>
         </div>
       );

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 	"time"
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
@@ -34,28 +34,21 @@ type Dinner struct {
 	Reservations []Reservation `bson:"reservations" json:"reservations"`
 }
 
-func send(to string, otp string) error {
+func send(r Reservation, dt time.Time) error {
 	from := "atatticspace@gmail.com"
+	to := r.Email
 	pass := os.Getenv("GMAIL_PW")
 
 	msg := "From: " + from + "\n" +
 		"To: " + to + "\n" +
-		"Subject: silent&counter confirmation code\n\n" +
-		"use this code to confirm your dinner: " + otp
+		"Subject: silent&counter dinner confirmed\n\n" +
+		"your dinner is confirmed––see you!\n\n" +
+		dt.Format("Mon, Jan _2") + "\n" +
+		strconv.Itoa(r.Slots) + "\n" + r.Name + "\n" + r.Email + "\n" + r.Dietary
 
 	return smtp.SendMail("smtp.gmail.com:587",
 		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
 		from, []string{to}, []byte(msg))
-}
-
-func getOTP(n int) string {
-	var letterRunes = []rune("0123456789")
-	rand.Seed(time.Now().UnixNano())
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +64,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	reservation.Timestamp = time.Now()
-	reservation.Confirmed = false
-	reservation.DGAE = false
 	err = checkmail.ValidateFormat(reservation.Email)
 	if err != nil {
 		http.Error(w, "Invalid Email.", 500)
@@ -110,18 +100,22 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Err.", 500)
 		return
 	}
-	if (dinner.Available < reservation.Slots) {
-		http.Error(w, "This reservation isn't possible.", 500)
+	existingReservation := false
+	for i := 0; i < len(dinner.Reservations); i++ {
+		if dinner.Reservations[i].OTP == reservation.OTP {
+			dinner.Reservations[i].Confirmed = true
+			existingReservation = true
+			err = send(dinner.Reservations[i], dinner.DinnerTime)
+			if err != nil {
+				http.Error(w, "Unable to send email.", 500)
+				return
+			}
+		}
+	}
+	if !existingReservation {
+		http.Error(w, "Wrong OTP.", 500)
 		return
 	}
-	reservation.OTP = getOTP(4)
-	err = send(reservation.Email, reservation.OTP)
-	if err != nil {
-		http.Error(w, "Unable to send email.", 500)
-		return
-	}
-	dinner.Available = dinner.Available - reservation.Slots
-	dinner.Reservations = append(dinner.Reservations, reservation)
 	var newdinner Dinner
 	err = collection.FindOneAndReplace(ctx, bson.D{{"id", reservation.DinnerID}}, dinner).Decode(&newdinner)
 	if err != nil {
