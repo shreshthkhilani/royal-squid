@@ -1,68 +1,86 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Zeit Now Evaluation – Sample "Brutalist" Art App
+------------------------------------------------
 
-## Available Scripts
+[https://silentencounter.now.sh](https://silentencounter.now.sh)
 
-In the project directory, you can run:
+# Overview
 
-### `npm start`
+`royal-squid` is a Brutalist (in design) React app that allows for scheduling "silent&counter"s. It does so by communicating to a MongoDB database via Golang lambda functions.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Getting it to work locally is a royal-pain. 
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+Here's how to kinda do that: 
 
-### `npm test`
+First, get the ENV you need. These are specified in `.env.sample`. You need to copy this to `.env`.
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```sh
+cp .env.sample .env
+```
 
-### `npm run build`
+## React App
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+This part is easy! (But the app doesn't really work sans the next part...)
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+```sh
+npm install
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Golang API
 
-### `npm run eject`
+This part is not! Start by renaming the `package main` on the first line of the following files to `package dinners`, `package reserve`, `package confrim`, and `package users` respectively: `api/dinners/index.go`, `api/reserve/index.go`, `api/confrim/index.go`, `api/users/index.go`. I should have done this programatically while building the container, but I didn't––sorry!
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Okay, now it's easy. 
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```sh
+docker build -t royal-squid api
+docker run -it --rm -p 8080:8080 --env-file .env royal-squid
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Great––the problem now is that your Golang app is serving on a different port on localhost and trying to make React make requests to that port will yeild CORS errors––
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+# Zeit Now
 
-## Learn More
+Zeit Now is a tool for serverless applications. It gives you what Netlify does, including CI/CD, GitHub integration, hosting static files, hosting and serving lambdas. It also tries to go far beyond Netlify and it does this by offering infinite customization. Here are some of the customizations I've played with:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+ - Frontend code and lambdas can be written in any language there is a "builder" for––or you can write your own builder for your favorite language. 
+ - You can use any database that suits your needs. In this case, Atlas, MongoDB's hosted database.
+ - Authetication can be taken care of by you or by a third-party API. It isn't a feature provided out-of-the-box like with Netlify.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# How does this app work?
 
-### Code Splitting
+So, `royal-squid` gives you a frontend and API (written using lambdas that communicate with a database) to schedule a dinner with a potential art project––silent&counter. You click "signup" and are taken through this signup workflow involving seeing dinners available, picking a dinner, entering your info, and receiving an email with an OTP which you can enter to confirm your email and your reservation.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+# Questions
 
-### Analyzing the Bundle Size
+1. How does authentication work?
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+    Third-party authentication in the spirit of "bring-your-own" that we see in Now a lot. We can use Auth0 along with client-side cookies.
 
-### Making a Progressive Web App
+2. How can we communicate with a database?
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+    Lambdas can talk to databases like MongoDB Atlas or anything else. This communication involves using the language-specific drivers for the required database. 
 
-### Advanced Configuration
+3. We eventually may need to run custom code (e.g. Lambda functions). How will this be supported?
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+    Now provides out-of-the-box support for lambda functions. “Builders” are specified to create the lambda and routes at which the lambdas are available are specified in the `now.json` file.
 
-### Deployment
+4. How would we support uploading/displaying user profile images?
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+    Use lambdas to upload the image to S3, store URL in DB.
 
-### `npm run build` fails to minify
+5. What does local development look like?
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+    This, as spoken about above is a mess right now. Zeit is currently working on extending their CLI to include support for local development and are trying to make it as simple as running `now dev`. For now, this needs to be self-created (this app does some work towards that and that needs to be worked on some more). Zeit also has a package called `micro-dev` that runs lambdas in micro-services that are made available on the expected routes locally. This seems promising, but still hacky. 
+
+6. What does collaborative development look like?
+
+    GitHub PRs are deployed, which is really nice. Zeit UI allows teams. Need to explore more of what collaboration looks like. 
+
+7. What does deployment look like?
+
+    The major problem I see is that I've been unable to successfully deploy my app via GitHub once it started using secrets as environment variables. Now CLI has a way to add secrets to a project and every deploy needs to specify which secret should be made available as env. I haven't figured out how to do this via GitHub and so have been deploying using the CLI. This might be okay if we use our own CI tool to deploy to Now. But this, once again, requires more setup on our part.
+
+# Issues
+
+# Evaluation
