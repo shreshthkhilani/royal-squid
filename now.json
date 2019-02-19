@@ -6,12 +6,14 @@
     { "src": "api/dinners/*.go", "use": "@now/go" },
     { "src": "api/reserve/*.go", "use": "@now/go" },
     { "src": "api/confirm/*.go", "use": "@now/go" },
+    { "src": "api/users/*.go", "use": "@now/go" },
     { "src": "package.json", "use": "@now/static-build", "config": { "distDir": "build" } }
   ],
   "routes": [
     { "src": "/api/dinners/", "dest": "/api/dinners/" },
     { "src": "/api/reserve/", "dest": "/api/reserve/" },
     { "src": "/api/confirm/", "dest": "/api/confirm/" },
+    { "src": "/api/users/", "dest": "/api/users/" },
     { "src": "^/static/(.*)", "headers": { "cache-control": "s-maxage=31536000,immutable" }, "dest": "/static/$1" },
     { "src": "^/favicon.png", "dest": "/favicon.png" },
     { "src": "^/asset-manifest.json", "dest": "/asset-manifest.json" },

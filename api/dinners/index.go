@@ -18,6 +18,14 @@ type Dinner struct {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	filter := false
+	if val, ok := r.URL.Query()["filter"]; ok {
+		if len(val) == 1 {
+			if val[0] == "1" {
+				filter = true
+			}
+		}
+	}
 	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
 	client, err := mongo.Connect(ctx, "mongodb://silentdinneruser:" +
 		os.Getenv("MONGODB_PW") +
@@ -51,8 +59,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Err")
 		return
 	}
+	var filteredDinners []Dinner
+	for i := 0; i < len(dinners); i++ {
+		if dinners[i].DinnerTime.After(time.Now().Add((time.Hour * 6))) && dinners[i].Available != 0 {
+			filteredDinners = append(filteredDinners, dinners[i])
+		}
+	}
 	response := make(map[string]interface{})
-	response["dinners"] = dinners
+	if filter {
+		response["dinners"] = filteredDinners
+	} else {
+		response["dinners"] = dinners
+	}
 	rw, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		fmt.Fprintf(w, "MarshalIndent")
