@@ -17,22 +17,14 @@ import (
 )
 
 type Reservation struct {
+	ReservationID int `bson:"reservationId" json:"reservationId"`
 	DinnerID int `bson:"dinnerId" json:"dinnerId"`
 	Slots int `bson:"slots" json:"slots"`
 	Name string `bson:"name" json:"name"`
 	Email string `bson:"email" json:"email"`
 	Dietary string `bson:"dietary" json:"dietary"`
-	Confirmed bool `bson:"confirmed" json:"confirmed"`
-	DGAE bool `bson:"dgae" json:"dgae"`
 	OTP string `bson:"otp" json:"otp"`
 	Timestamp time.Time `bson:"timestamp" json:"timestamp"`
-}
-
-type Dinner struct {
-	ID int `bson:"id" json:"id"`
-	DinnerTime time.Time `bson:"dinnerTime" json:"dinnerTime"`
-	Available  int `bson:"available" json:"available"`
-	Reservations []Reservation `bson:"reservations" json:"reservations"`
 }
 
 func send(to string, otp string) error {
@@ -72,9 +64,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	reservation.Timestamp = time.Now()
-	reservation.Confirmed = false
-	reservation.DGAE = false
 	err = checkmail.ValidateFormat(reservation.Email)
 	if err != nil {
 		http.Error(w, "Invalid Email.", 500)
@@ -92,42 +81,26 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error connecting.", 500)
 		return
 	}
-	collection := client.Database("silentdinnerdb").Collection("times")
-	ctx, _ = context.WithTimeout(context.Background(), 30 * time.Second)
-	cur, err := collection.Find(ctx, bson.D{{"id", reservation.DinnerID}})
+	collection := client.Database("silentdinnerdb").Collection("reservations")
+	count64, err := collection.CountDocuments(ctx, bson.D{{}});
 	if err != nil {
-		http.Error(w, "Find.", 500)
+		http.Error(w, "Count.", 500)
+		log.Fatal(err)
 		return
 	}
-	defer cur.Close(ctx)
-	var dinner Dinner
-	cur.Next(ctx)
-	err = cur.Decode(&dinner)
-	if err != nil {
-		http.Error(w, "Decode.", 500)
-		return
-	}
-	if err = cur.Err(); err != nil {
-		http.Error(w, "Err.", 500)
-		return
-	}
-	if (dinner.Available < reservation.Slots) {
-		http.Error(w, "This reservation isn't possible.", 500)
-		return
-	}
+	reservation.ReservationID = int(count64) + 1
 	reservation.OTP = getOTP(4)
+	reservation.Timestamp = time.Now()
 	err = send(reservation.Email, reservation.OTP)
 	if err != nil {
 		http.Error(w, "Unable to send email.", 500)
 		log.Fatal(err)
 		return
 	}
-	dinner.Available = dinner.Available - reservation.Slots
-	dinner.Reservations = append(dinner.Reservations, reservation)
-	var newdinner Dinner
-	err = collection.FindOneAndReplace(ctx, bson.D{{"id", reservation.DinnerID}}, dinner).Decode(&newdinner)
+	_, err = collection.InsertOne(ctx, reservation)
 	if err != nil {
-		http.Error(w, "Decode 2.", 500)
+		http.Error(w, "Insert.", 500)
+		log.Fatal(err)
 		return
 	}
 	response := make(map[string]interface{})

@@ -15,13 +15,12 @@ import (
 )
 
 type Reservation struct {
+	ReservationID int `bson:"reservationId" json:"reservationId"`
 	DinnerID int `bson:"dinnerId" json:"dinnerId"`
 	Slots int `bson:"slots" json:"slots"`
 	Name string `bson:"name" json:"name"`
 	Email string `bson:"email" json:"email"`
 	Dietary string `bson:"dietary" json:"dietary"`
-	Confirmed bool `bson:"confirmed" json:"confirmed"`
-	DGAE bool `bson:"dgae" json:"dgae"`
 	OTP string `bson:"otp" json:"otp"`
 	Timestamp time.Time `bson:"timestamp" json:"timestamp"`
 }
@@ -51,18 +50,20 @@ func send(r Reservation, dt time.Time) error {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	// Read body
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	var reservation Reservation
-	err = json.Unmarshal(b, &reservation)
+	var res Reservation
+	err = json.Unmarshal(b, &res)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	// Connect to DB
 	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
 	client, err := mongo.Connect(ctx, "mongodb://silentdinneruser:" +
 		os.Getenv("MONGODB_PW") +
@@ -75,9 +76,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error connecting.", 500)
 		return
 	}
-	collection := client.Database("silentdinnerdb").Collection("times")
+	// Get dinner object
 	ctx, _ = context.WithTimeout(context.Background(), 30 * time.Second)
-	cur, err := collection.Find(ctx, bson.D{{"id", reservation.DinnerID}})
+	dinnersCollection := client.Database("silentdinnerdb").Collection("times")
+	cur, err := dinnersCollection.Find(ctx, bson.D{{"id", res.DinnerID}})
 	if err != nil {
 		http.Error(w, "Find.", 500)
 		return
@@ -94,29 +96,49 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Err.", 500)
 		return
 	}
-	existingReservation := false
-	for i := 0; i < len(dinner.Reservations); i++ {
-		if dinner.Reservations[i].OTP == reservation.OTP {
-			dinner.Reservations[i].Confirmed = true
-			existingReservation = true
-			reservation = dinner.Reservations[i]
-			err = send(dinner.Reservations[i], dinner.DinnerTime)
-			if err != nil {
-				http.Error(w, "Unable to send email.", 500)
-				return
-			}
-		}
+	// Get reservation object
+	reservationsCollection := client.Database("silentdinnerdb").Collection("reservations")
+	cur, err = reservationsCollection.Find(ctx, bson.D{{"reservationId", res.ReservationID}})
+	if err != nil {
+		http.Error(w, "Find.", 500)
+		return
 	}
-	if !existingReservation {
+	defer cur.Close(ctx)
+	var reservation Reservation
+	cur.Next(ctx)
+	err = cur.Decode(&reservation)
+	if err != nil {
+		http.Error(w, "Decode res.", 500)
+		return
+	}
+	if err = cur.Err(); err != nil {
+		http.Error(w, "Err res.", 500)
+		return
+	}
+	// Check if reservation can be made
+	if dinner.Available < reservation.Slots {
+		http.Error(w, "Not enough availablity.", 500)
+		return
+	}
+	if res.OTP != reservation.OTP {
 		http.Error(w, "Wrong OTP.", 500)
 		return
 	}
+	// Add reservation to dinner
+	dinner.Reservations = append(dinner.Reservations, reservation)
+	dinner.Available = dinner.Available - reservation.Slots
+	err = send(reservation, dinner.DinnerTime)
+	if err != nil {
+		http.Error(w, "Unable to send email.", 500)
+		return
+	}
 	var newdinner Dinner
-	err = collection.FindOneAndReplace(ctx, bson.D{{"id", reservation.DinnerID}}, dinner).Decode(&newdinner)
+	err = dinnersCollection.FindOneAndReplace(ctx, bson.D{{"id", reservation.DinnerID}}, dinner).Decode(&newdinner)
 	if err != nil {
 		http.Error(w, "Decode 2.", 500)
 		return
 	}
+	// Return confirmed reservation
 	response := make(map[string]interface{})
 	response["reservation"] = reservation
 	rw, err := json.MarshalIndent(response, "", "  ")

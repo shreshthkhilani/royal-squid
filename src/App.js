@@ -19,7 +19,6 @@ const initalState = {
   awaitingConfirmation: false,
   otp: '',
   confirmed: false,
-  dgae: false,
   error: false
 };
 
@@ -38,7 +37,6 @@ class App extends Component {
     this.buttonClickedHandler = this.buttonClickedHandler.bind(this);
     this.otpChangedHandler = this.otpChangedHandler.bind(this);
     this.confirmedHandler = this.confirmedHandler.bind(this);
-    this.dgaeHandler = this.dgaeHandler.bind(this);
     this.attemptConfirmation = this.attemptConfirmation.bind(this);
     this.lmkClickedHandler = this.lmkClickedHandler.bind(this);
   }
@@ -63,7 +61,6 @@ class App extends Component {
       })
       .catch((error) => {
         this.setState({dinners: [], dinnersChecked: true});
-        // this.setState({dinners, dinnersChecked: true});
       });
   }
   nameChangedHandler(e) {
@@ -98,16 +95,11 @@ class App extends Component {
     };
     axios.post('/api/reserve/', postData)
       .then((data) => {
-        this.setState({
-          awaitingConfirmation: true,
-          confirmed: data.data.reservation.confirmed,
-          dgae: data.data.reservation.dgae
-        });
+        this.setState({awaitingConfirmation: true});
       })
       .catch((error) => {
         this.setState({error: true});
       });
-    // this.setState({awaitingConfirmation: true});
   }
   otpChangedHandler(e) {
     this.setState({otp: e.target.value});
@@ -119,10 +111,7 @@ class App extends Component {
     };
     axios.post('/api/confirm/', postData)
       .then((data) => {
-        this.setState({
-          confirmed: data.data.reservation.confirmed,
-          dgae: data.data.reservation.dgae
-        });
+        this.setState({confirmed: true});
       })
       .catch((error) => {
         this.setState({error: true});
@@ -130,11 +119,6 @@ class App extends Component {
   }
   confirmedHandler() {
     this.attemptConfirmation();
-    // this.setState({confirmed: true});
-  }
-  dgaeHandler() {
-    this.attemptConfirmation();
-    // this.setState({dgae: true});
   }
   lmkClickedHandler() {
     const postData = {
@@ -175,7 +159,6 @@ class App extends Component {
           <br/>
           <div align="center">
           {this.state.otp !== '' ? <button onClick={this.confirmedHandler}>confirm</button> : undefined}
-          <button id="dgae" onClick={this.dgaeHandler}>i didn't get an email...</button>
           </div>
         </div>
       );
@@ -189,12 +172,6 @@ class App extends Component {
         slotted = (
           <div id="slotted">
             <p className="question">sorry, there was an error processing your request...</p>
-          </div>
-        );
-      } else if (this.state.dgae) {
-        slotted = (
-          <div id="slotted">
-            <p className="question">you're confirmed&mdash;expect an email! see you soon...</p>
           </div>
         );
       } else if (this.state.confirmed) {

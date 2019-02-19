@@ -43,7 +43,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	collection := client.Database("silentdinnerdb").Collection("users")
-	ctx, _ = context.WithTimeout(context.Background(), 30 * time.Second)
 	_, err = collection.InsertOne(context.Background(), user)
 	if err != nil {
 		http.Error(w, "Insert.", 500)
